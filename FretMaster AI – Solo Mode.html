@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guitar Fretboard Explorer</title>
+  <style>
+    :root {
+      --bg-slate-950: #020617;
+      --bg-slate-900: #0f172a;
+      --bg-slate-800: #1e293b;
+      --bg-slate-700: #334155;
+      --text-slate-200: #e2e8f0;
+      --text-slate-400: #94a3b8;
+      --text-slate-500: #64748b;
+      --primary-600: #4f46e5;
+      --primary-500: #6366f1;
+      --rose-600: #e11d48;
+      --rose-500: #f43f5e;
+      --amber-500: #f59e0b;
+      --amber-400: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-slate-950);
+      color: var(--text-slate-200);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Utilities */
+    .container {
+      max-width: 64rem;
+      margin: 0 auto;
+      padding: 1rem;
+      width: 100%;
+    }
+
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-6 { gap: 1.5rem; }
+    .gap-8 { gap: 2rem; }
+    .w-full { width: 100%; }
+    
+    /* Typography */
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+    .text-lg { font-size: 1.125rem; font-weight: 600; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-bold { font-weight: 700; }
+    .font-mono { font-family: monospace; }
+    .uppercase { text-transform: uppercase; }
+    .tracking-wider { letter-spacing: 0.05em; }
+    .text-muted { color: var(--text-slate-400); }
+    .text-primary { color: #818cf8; }
+    .text-amber { color: var(--amber-400); }
+
+    /* Header */
+    header {
+      padding: 1.5rem;
+      background-color: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      border-bottom: 1px solid var(--bg-slate-800);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    
+    .logo-box {
+      background-color: var(--primary-600);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      margin-right: 0.75rem;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(to right, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    /* Cards */
+    .card {
+      background-color: var(--bg-slate-900);
+      border: 1px solid var(--bg-slate-800);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Controls */
+    .key-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .btn-key {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: 1px solid var(--bg-slate-700);
+      background-color: var(--bg-slate-800);
+      color: var(--text-slate-400);
+      transition: all 0.2s;
+    }
+
+    .btn-key:hover {
+      background-color: var(--bg-slate-700);
+      color: var(--text-slate-200);
+    }
+
+    .btn-key.active {
+      background-color: var(--primary-600);
+      border-color: var(--primary-500);
+      color: white;
+      box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+    }
+
+    .select-input {
+      width: 100%;
+      background-color: var(--bg-slate-800);
+      border: 1px solid var(--bg-slate-700);
+      color: var(--text-slate-200);
+      border-radius: 0.5rem;
+      padding: 0.625rem 1rem;
+      outline: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    
+    .select-input:focus {
+      border-color: var(--primary-500);
+    }
+
+    optgroup {
+      background-color: var(--bg-slate-900);
+      color: var(--text-slate-400);
+      font-weight: bold;
+    }
+
+    /* Tool toggles */
+    .tool-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-tool {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1px solid var(--bg-slate-700);
+      background-color: var(--bg-slate-800);
+      color: var(--text-slate-400);
+      cursor: pointer;
+    }
+    
+    .btn-tool.active {
+      background-color: var(--bg-slate-700);
+      color: var(--text-slate-200);
+      border-color: var(--text-slate-500);
+    }
+
+    /* Fretboard */
+    .fretboard-container {
+      overflow-x: auto;
+      padding-bottom: 1rem;
+    }
+    
+    .fretboard-scroll {
+      min-width: 800px;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .fret-numbers {
+      display: flex;
+      margin-bottom: 0.5rem;
+      margin-left: 30px; /* Offset for nut */
+    }
+
+    .fret-num {
+      flex: 1;
+      text-align: center;
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: var(--text-slate-500);
+      position: relative;
+      height: 1.5rem;
+    }
+
+    .fret-marker-dot {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background-color: var(--bg-slate-700);
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+
+    .board {
+      background-color: #1e1b18;
+      border: 2px solid var(--bg-slate-700);
+      border-radius: 0.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .board-texture {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, rgba(0,0,0,0.4), transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .strings-container {
+      position: relative;
+      z-index: 10;
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .guitar-string {
+      display: flex;
+      position: relative;
+      height: 3rem;
+      align-items: center;
+    }
+
+    .string-line {
+      position: absolute;
+      width: 100%;
+      background: linear-gradient(to bottom, #94a3b8, #475569);
+      top: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .fret-cell {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      height: 100%;
+      border-right: 1px solid rgba(51, 65, 85, 0.5);
+    }
+
+    .fret-cell.open {
+      border-right: 4px solid var(--bg-slate-700);
+      background-color: rgba(15, 23, 42, 0.3);
+    }
+
+    .fret-cell.dimmed {
+      opacity: 0.1;
+    }
+
+    .note-marker {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      z-index: 20;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .note-root {
+      background-color: var(--rose-600);
+      color: white;
+      box-shadow: 0 0 15px rgba(225, 29, 72, 0.6);
+      transform: scale(1.1);
+      z-index: 25;
+    }
+
+    .note-character {
+      background-color: var(--amber-500);
+      color: white;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+      z-index: 24;
+    }
+
+    .note-scale {
+      background-color: var(--primary-600);
+      color: white;
+      box-shadow: 0 0 10px rgba(79, 70, 229, 0.4);
+    }
+
+    .nut-label {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      font-size: 10px;
+      color: var(--text-slate-500);
+      font-family: monospace;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      width: 20px;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
+      color: var(--text-slate-400);
+      flex-wrap: wrap;
+    }
+    
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+    .dot { width: 1rem; height: 1rem; border-radius: 50%; }
+    .dot-red { background-color: var(--rose-500); box-shadow: 0 0 8px rgba(244,63,94,0.5); }
+    .dot-amber { background-color: var(--amber-500); box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+    .dot-blue { background-color: var(--primary-500); box-shadow: 0 0 8px rgba(99,102,241,0.5); }
+
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .info-grid { grid-template-columns: 1fr 1fr; }
+      .control-row { flex-direction: row; align-items: start; }
+      .tools-wrapper { align-items: flex-end; }
+    }
+    .control-row { display: flex; flex-direction: column; gap: 1.5rem; justify-content: space-between; }
+
+    .interval-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background-color: var(--bg-slate-800);
+      border: 1px solid var(--bg-slate-700);
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .interval-badge.character {
+      border-color: var(--amber-500);
+      color: var(--amber-400);
+      background-color: rgba(245, 158, 11, 0.1);
+    }
+
+    footer {
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--text-slate-500);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--bg-slate-800);
+      margin-top: auto;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+</head>
+<body>
+
+  <header>
+    <div class="container" style="display: flex; align-items: center;">
+      <div class="logo-box">
+        <!-- Guitar Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+          <path d="M6 18V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+          <circle cx="12" cy="14" r="4"></circle>
+          <path d="M6 18c0 2 2 4 6 4s6-2 6-4"></path>
+        </svg>
+      </div>
+      <h1 class="text-2xl gradient-text">Soloist Fretboard</h1>
+    </div>
+  </header>
+
+  <main class="container" style="flex: 1; display: flex; flex-direction: column; gap: 2rem;">
+    
+    <!-- Controls Section -->
+    <section class="card">
+      <div class="control-row">
+        <div style="flex: 1;">
+          <label class="text-xs uppercase tracking-wider font-bold text-muted" style="display: block; margin-bottom: 0.5rem;">Select Key</label>
+          <div class="key-grid" id="key-selector"></div>
+        </div>
+        
+        <div class="flex flex-col gap-4 w-full md:w-auto tools-wrapper">
+          <div style="width: 100%; min-width: 250px;">
+            <label class="text-xs uppercase tracking-wider font-bold text-muted" style="display: block; margin-bottom: 0.5rem;">Select Scale</label>
+            <select id="scale-selector" class="select-input"></select>
+          </div>
+          
+          <!-- Solo Tools -->
+           <div style="width: 100%; min-width: 250px;">
+             <label class="text-xs uppercase tracking-wider font-bold text-muted" style="display: block; margin-bottom: 0.5rem;">Position / Box</label>
+             <div class="tool-group" id="box-selector">
+                <button class="btn-tool active" data-box="0">Full</button>
+                <button class="btn-tool" data-box="1">1</button>
+                <button class="btn-tool" data-box="2">2</button>
+                <button class="btn-tool" data-box="3">3</button>
+                <button class="btn-tool" data-box="4">4</button>
+                <button class="btn-tool" data-box="5">5</button>
+             </div>
+           </div>
+
+           <div style="width: 100%;">
+              <label class="text-xs uppercase tracking-wider font-bold text-muted" style="display: block; margin-bottom: 0.5rem;">Focus</label>
+              <button id="btn-toggle-targets" class="btn-tool w-full" style="text-align: center;">
+                 Show All Notes
+              </button>
+           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fretboard Section -->
+    <section class="card" style="padding: 0;">
+      <div class="fretboard-container">
+        <div class="fretboard-scroll">
+          
+          <div id="fret-numbers" class="fret-numbers"></div>
+
+          <div class="board">
+            <div class="board-texture"></div>
+            <div class="nut-label">NUT</div>
+            <div id="strings-container" class="strings-container"></div>
+          </div>
+
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <div class="dot dot-red"></div>
+            <span>Root</span>
+          </div>
+          <div class="legend-item">
+            <div class="dot dot-amber"></div>
+            <span>Character Note</span>
+          </div>
+          <div class="legend-item">
+            <div class="dot dot-blue"></div>
+            <span>Scale Note</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Section -->
+    <section class="info-grid">
+      <div class="card">
+        <h3 class="text-lg text-primary" style="margin-bottom: 1rem;">Soloist Intelligence</h3>
+        <div style="line-height: 1.6;">
+          <p class="text-muted"><span style="color: var(--text-slate-200); font-weight: 500;">Scale:</span> <span id="info-scale"></span> <span id="info-key" class="text-primary"></span></p>
+          <p class="text-sm text-slate-200" style="margin-top: 0.5rem; font-style: italic;" id="info-desc"></p>
+          
+          <div style="margin-top: 1.5rem;">
+            <p class="text-xs uppercase tracking-wider font-bold text-muted">Pro Tip</p>
+            <p id="info-tip" class="text-amber" style="margin-top: 0.25rem;"></p>
+          </div>
+
+          <div style="margin-top: 1rem;">
+             <p class="text-xs uppercase tracking-wider font-bold text-muted">Best Used Over</p>
+             <p id="info-chord" class="text-slate-200" style="margin-top: 0.25rem; font-family: monospace;"></p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3 class="text-lg text-primary" style="margin-bottom: 1rem;">Interval Structure</h3>
+        <p class="text-xs text-muted" style="margin-bottom: 1rem;">Highlighted intervals give this scale its unique flavor.</p>
+        <div id="info-intervals"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>Soloist Fretboard • Single File Offline App</p>
+  </footer>
+
+  <script>
+    // --- Constants ---
+    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const STANDARD_TUNING = ['E', 'B', 'G', 'D', 'A', 'E']; // High E (index 0) to Low E
+    const FRET_MARKERS = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+    
+    // Definition of scales with Soloist metadata
+    const SCALES = {
+      // Pentatonic & Blues
+      'Minor Pentatonic': {
+        category: 'Pentatonic & Blues',
+        intervals: [3, 2, 2, 3, 2],
+        charIntervals: [], 
+        description: 'The absolute essential rock and blues scale. Five box shapes unlock the neck.',
+        soloTip: 'Bend the b3 slightly sharp for that "bluesy" curl. Safe over almost any minor progression.',
+        chordFit: 'Min, m7, m7b5'
+      },
+      'Blues Scale': {
+        category: 'Pentatonic & Blues',
+        intervals: [3, 2, 1, 1, 3, 2],
+        charIntervals: [6], // The b5 (cumulative 6 semitones)
+        description: 'Minor pentatonic with the "blue note" (b5) added for tension.',
+        soloTip: 'Use the b5 as a passing tone. Don\'t linger on it; resolve to 4 or 5.',
+        chordFit: 'Min, m7, Dom7 (Blues)'
+      },
+      'Major Pentatonic': {
+        category: 'Pentatonic & Blues',
+        intervals: [2, 2, 3, 2, 3],
+        charIntervals: [],
+        description: 'Country, Folk, and Classic Rock staple. Bright and open sound.',
+        soloTip: 'Same shapes as Minor Pentatonic, just start 3 frets lower (relative minor).',
+        chordFit: 'Maj, Maj7, Dom7'
+      },
+      
+      // Major Modes
+      'Ionian (Major)': {
+        category: 'Major Modes',
+        intervals: [2, 2, 1, 2, 2, 2, 1],
+        charIntervals: [11], // Major 7
+        description: 'The mother of all Western harmony. Happy, resolved, and pure.',
+        soloTip: 'Target the major 3rd and 7th to define the chord changes.',
+        chordFit: 'Maj, Maj7'
+      },
+      'Dorian': {
+        category: 'Major Modes',
+        intervals: [2, 1, 2, 2, 2, 1, 2],
+        charIntervals: [9], // Major 6
+        description: 'Minor scale with a natural 6th. The "Carlos Santana" or "Pink Floyd" minor.',
+        soloTip: 'Highlight the natural 6th note to distinguish it from the sadder Aeolian sound.',
+        chordFit: 'm7, m6, m13'
+      },
+      'Phrygian': {
+        category: 'Major Modes',
+        intervals: [1, 2, 2, 2, 1, 2, 2],
+        charIntervals: [1], // b2
+        description: 'Minor scale with a flat 2nd. Dark, exotic, Spanish, or Metal flavor.',
+        soloTip: 'Lean on the b2 -> 1 resolution for maximum tension and dark atmosphere.',
+        chordFit: 'm7, m7b9, sus4(b9)'
+      },
+      'Lydian': {
+        category: 'Major Modes',
+        intervals: [2, 2, 2, 1, 2, 2, 1],
+        charIntervals: [6], // #4
+        description: 'Major scale with a sharp 4th. Dreamy, cinematic, and floaty (Steve Vai/Satriani).',
+        soloTip: 'The #4 is the magic note. It creates a mystical "unresolved" brightness.',
+        chordFit: 'Maj7, Maj7(#11)'
+      },
+      'Mixolydian': {
+        category: 'Major Modes',
+        intervals: [2, 2, 1, 2, 2, 1, 2],
+        charIntervals: [10], // b7
+        description: 'Major scale with a flat 7th. The sound of classic rock, jam bands, and blues.',
+        soloTip: 'Mixes perfectly with Major Pentatonic. Fits dominant 7th chords perfectly.',
+        chordFit: 'Dom7, Dom9, sus4'
+      },
+      'Aeolian (Nat. Minor)': {
+        category: 'Major Modes',
+        intervals: [2, 1, 2, 2, 1, 2, 2],
+        charIntervals: [8], // b6
+        description: 'The sad, dramatic minor scale. Heavy metal and emotional ballads.',
+        soloTip: 'The b6 is the "tear-jerker" note. Resolve it down to the 5th.',
+        chordFit: 'Min, m7, m9, m11'
+      },
+      'Locrian': {
+        category: 'Major Modes',
+        intervals: [1, 2, 2, 1, 2, 2, 2],
+        charIntervals: [6], // b5
+        description: 'Diminished feel. Unstable and tense. Rarely used for long solos.',
+        soloTip: 'Used briefly over m7b5 chords in Jazz ii-V-I progressions.',
+        chordFit: 'm7b5 (Half-diminished)'
+      },
+      
+      // Harmonic & Melodic
+      'Harmonic Minor': {
+        category: 'Harmonic & Melodic',
+        intervals: [2, 1, 2, 2, 1, 3, 1],
+        charIntervals: [11], // Maj 7 in minor context
+        description: 'Classical, Neo-classical metal (Yngwie Malmsteen). Exotic Arabic feel.',
+        soloTip: 'The 3-semitone jump between b6 and 7 is the signature sound.',
+        chordFit: 'm(maj7), Dom7b9 (V of minor)'
+      },
+      'Melodic Minor': {
+        category: 'Harmonic & Melodic',
+        intervals: [2, 1, 2, 2, 2, 2, 1],
+        charIntervals: [11, 9], // Maj 7 and Maj 6
+        description: 'Sophisticated Jazz minor. No avoid notes. Mysterious and smooth.',
+        soloTip: 'Great for playing over m6 chords. Sounds like "Major with a flat 3rd".',
+        chordFit: 'm(maj7), m6'
+      },
+      'Phrygian Dominant': {
+        category: 'Harmonic & Melodic',
+        intervals: [1, 3, 1, 2, 1, 2, 2],
+        charIntervals: [1, 4], // b2 and Maj 3
+        description: '5th mode of Harmonic Minor. The "Egyptian" or "Flamenco" scale.',
+        soloTip: 'Creates massive tension over a V chord in a minor key. Very distinct b2 to 1 pull.',
+        chordFit: 'Dom7(b9)'
+      },
+      'Altered Scale': {
+        category: 'Harmonic & Melodic',
+        intervals: [1, 2, 1, 2, 2, 2, 2],
+        charIntervals: [1, 3, 6, 8], // b9, #9, b5, #5
+        description: 'Super Locrian. Used in Jazz to play over altered dominant chords.',
+        soloTip: 'Contains every possible alteration (b9, #9, b5, #5). Resolves strongly to I.',
+        chordFit: 'Dom7alt (7#9, 7b9, 7b5, etc)'
+      },
+
+      // Advanced / Jazz / Exotic
+      'Bebop Dominant': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [2, 2, 1, 2, 2, 1, 1, 1], // Mixolydian + Maj7
+        charIntervals: [11], // The passing Major 7
+        description: 'Mixolydian scale with a chromatic passing tone (Maj 7). Essential for jazz lines.',
+        soloTip: 'Play descending runs placing the chord tones (1, 3, 5, b7) on strong beats.',
+        chordFit: 'Dom7'
+      },
+      'Bebop Major': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [2, 2, 1, 2, 1, 1, 2, 1], // Major + #5/b6
+        charIntervals: [8], // The #5 passing tone
+        description: 'Major scale with a chromatic passing tone (#5). Smooth jazz phrasing.',
+        soloTip: 'Use to connect the 5th and 6th degree chromatically.',
+        chordFit: 'Maj7, Maj6'
+      },
+      'Half-Whole Diminished': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [1, 2, 1, 2, 1, 2, 1, 2], // 1, b2, b3, 3, #4, 5, 6, b7
+        charIntervals: [1, 3, 6, 9], // b9, #9, #11, 13 (Tensions)
+        description: 'Symmetric scale alternating half and whole steps. The "Dominant Diminished" sound.',
+        soloTip: 'The ultimate "outside" sound for Dominant chords resolving to a minor chord.',
+        chordFit: 'Dom7(b9, #9, #11)'
+      },
+      'Whole-Half Diminished': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [2, 1, 2, 1, 2, 1, 2, 1], // 1, 2, b3, 4, b5, b6, 6, 7
+        charIntervals: [2, 5, 8, 11], // 9, 11, b13, Maj7 (Extensions over dim7)
+        description: 'Symmetric scale alternating whole and half steps. Used over fully diminished chords.',
+        soloTip: 'Any pattern you play can be moved up or down by minor 3rds (3 frets) symmetrically.',
+        chordFit: 'dim7'
+      },
+      'Whole Tone': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [2, 2, 2, 2, 2, 2],
+        charIntervals: [6, 8, 10], // #4, #5, b7
+        description: 'Symmetric scale made entirely of whole steps. Dreamy, floating, undefined root.',
+        soloTip: 'No half steps means no strong resolution. Great for augmented chords.',
+        chordFit: 'Aug, 7(#5), 9(#5)'
+      },
+      'Hungarian Minor': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [2, 1, 3, 1, 1, 3, 1],
+        charIntervals: [6, 11], // #4 and Maj7
+        description: 'Harmonic Minor with a raised 4th. Very exotic, gypsy-jazz flavor.',
+        soloTip: 'The interval between b3 and #4 is unique. Sounds darker than Lydian.',
+        chordFit: 'm(maj7)#11'
+      },
+      'Double Harmonic Major': {
+        category: 'Advanced / Jazz / Exotic',
+        intervals: [1, 3, 1, 2, 1, 3, 1],
+        charIntervals: [1, 8], // b2 and b6
+        description: 'Major scale with flat 2 and flat 6. Also known as Byzantine or Gypsy Major.',
+        soloTip: 'Surf rock classic (Misirlou). The consecutive half steps around the root are intense.',
+        chordFit: 'Maj7'
+      }
+    };
+
+    // --- State ---
+    let state = {
+      key: 'E',
+      scale: 'Minor Pentatonic',
+      box: 0, // 0 = All, 1-5 = Box positions
+      onlyTargets: false
+    };
+
+    // --- DOM Elements ---
+    const els = {
+      keySelector: document.getElementById('key-selector'),
+      scaleSelector: document.getElementById('scale-selector'),
+      boxSelector: document.getElementById('box-selector'),
+      btnToggleTargets: document.getElementById('btn-toggle-targets'),
+      stringsContainer: document.getElementById('strings-container'),
+      fretNumbers: document.getElementById('fret-numbers'),
+      
+      infoKey: document.getElementById('info-key'),
+      infoScale: document.getElementById('info-scale'),
+      infoDesc: document.getElementById('info-desc'),
+      infoTip: document.getElementById('info-tip'),
+      infoChord: document.getElementById('info-chord'),
+      infoIntervals: document.getElementById('info-intervals'),
+    };
+
+    // --- Logic ---
+    function getNoteIndex(note) {
+      return NOTES.indexOf(note);
+    }
+
+    function getNoteAtStep(root, semitones) {
+      const rootIdx = getNoteIndex(root);
+      return NOTES[(rootIdx + semitones) % 12];
+    }
+
+    function generateScaleData(key, scaleName) {
+      const scaleDef = SCALES[scaleName];
+      const notes = [];
+      
+      let semitoneSum = 0;
+      // Root
+      notes.push({ note: key, interval: 0, isRoot: true, isChar: false });
+
+      for (let i = 0; i < scaleDef.intervals.length; i++) {
+        const interval = scaleDef.intervals[i];
+        semitoneSum += interval;
+        // Check < 12 to avoid adding octave as a separate note if not desired, 
+        // though some 8-note scales might end exactly on 12.
+        if (semitoneSum < 12) {
+          const note = getNoteAtStep(key, semitoneSum);
+          const isChar = scaleDef.charIntervals.includes(semitoneSum);
+          notes.push({ note, interval: semitoneSum, isRoot: false, isChar });
+        }
+      }
+      return notes;
+    }
+
+    // Helper: Determine valid fret range for a Box
+    function getBoxRange(key, scaleName, boxNum) {
+      if (boxNum === 0) return null; // All
+      
+      const rootIdx = getNoteIndex(key);
+      const stringBaseNote = STANDARD_TUNING[5]; // 'E'
+      const baseNoteIdx = getNoteIndex(stringBaseNote);
+      
+      const scaleDef = SCALES[scaleName];
+      // Calculate intervals cumulative
+      const cumulativeIntervals = [0];
+      scaleDef.intervals.forEach(int => {
+        const last = cumulativeIntervals[cumulativeIntervals.length - 1];
+        if (last + int < 12) cumulativeIntervals.push(last + int);
+      });
+
+      if (boxNum > cumulativeIntervals.length) return null; // Safety
+      
+      const targetInterval = cumulativeIntervals[boxNum - 1];
+      
+      const noteIdx = (rootIdx + targetInterval) % 12;
+      let noteFret = (noteIdx - baseNoteIdx + 12) % 12;
+      
+      return { start: noteFret, end: noteFret + 4 };
+    }
+
+    // --- Render Functions ---
+
+    function initControls() {
+      // Render Keys
+      els.keySelector.innerHTML = '';
+      NOTES.forEach(note => {
+        const btn = document.createElement('button');
+        btn.className = `btn-key ${note === state.key ? 'active' : ''}`;
+        btn.textContent = note;
+        btn.onclick = () => {
+          state.key = note;
+          updateUI();
+        };
+        els.keySelector.appendChild(btn);
+      });
+
+      // Render Scale Options with Categories
+      els.scaleSelector.innerHTML = '';
+      
+      const categories = {};
+      Object.entries(SCALES).forEach(([name, data]) => {
+        const cat = data.category || 'Other';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(name);
+      });
+
+      const catOrder = [
+        'Pentatonic & Blues',
+        'Major Modes',
+        'Harmonic & Melodic',
+        'Advanced / Jazz / Exotic'
+      ];
+
+      // Sort categories
+      const sortedCats = Object.keys(categories).sort((a, b) => {
+         const idxA = catOrder.indexOf(a);
+         const idxB = catOrder.indexOf(b);
+         // If not in order list, put at end
+         if (idxA === -1) return 1;
+         if (idxB === -1) return -1;
+         return idxA - idxB;
+      });
+
+      sortedCats.forEach(cat => {
+        const group = document.createElement('optgroup');
+        group.label = cat;
+        categories[cat].forEach(scaleName => {
+           const opt = document.createElement('option');
+           opt.value = scaleName;
+           opt.textContent = scaleName;
+           group.appendChild(opt);
+        });
+        els.scaleSelector.appendChild(group);
+      });
+
+      els.scaleSelector.value = state.scale;
+      els.scaleSelector.onchange = (e) => {
+        state.scale = e.target.value;
+        updateUI();
+      };
+      
+      // Box Selectors
+      const boxBtns = els.boxSelector.querySelectorAll('.btn-tool');
+      boxBtns.forEach(btn => {
+        btn.onclick = () => {
+          state.box = parseInt(btn.dataset.box);
+          boxBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          updateUI();
+        };
+      });
+
+      // Toggle Target
+      els.btnToggleTargets.onclick = () => {
+        state.onlyTargets = !state.onlyTargets;
+        els.btnToggleTargets.textContent = state.onlyTargets ? "Show Targets Only" : "Show All Notes";
+        els.btnToggleTargets.classList.toggle('active', state.onlyTargets);
+        updateUI();
+      };
+    }
+
+    function renderFretNumbers() {
+      els.fretNumbers.innerHTML = '';
+      for (let i = 0; i <= 15; i++) { // Show up to 15 frets for sliding
+        const div = document.createElement('div');
+        div.className = 'fret-num';
+        div.textContent = i === 0 ? 'Open' : i;
+        if (FRET_MARKERS.includes(i)) {
+          const dot = document.createElement('div');
+          dot.className = 'fret-marker-dot';
+          div.appendChild(dot);
+        }
+        els.fretNumbers.appendChild(div);
+      }
+    }
+
+    function renderFretboard() {
+      els.stringsContainer.innerHTML = '';
+      const scaleNotes = generateScaleData(state.key, state.scale);
+      const scaleNoteMap = new Map(scaleNotes.map(n => [n.note, n]));
+      
+      let boxRange = getBoxRange(state.key, state.scale, state.box);
+      
+      STANDARD_TUNING.forEach((stringRoot, index) => {
+        const thickness = 1 + (index * 0.8);
+        const stringRow = document.createElement('div');
+        stringRow.className = 'guitar-string';
+        
+        const line = document.createElement('div');
+        line.className = 'string-line';
+        line.style.height = `${thickness}px`;
+        stringRow.appendChild(line);
+
+        for (let fret = 0; fret <= 15; fret++) {
+          const noteIndex = (getNoteIndex(stringRoot) + fret) % 12;
+          const noteName = NOTES[noteIndex];
+          const scaleNote = scaleNoteMap.get(noteName);
+          
+          const cell = document.createElement('div');
+          cell.className = `fret-cell ${fret === 0 ? 'open' : ''}`;
+          
+          let isVisible = true;
+          if (boxRange) {
+             const rStart = boxRange.start;
+             const rEnd = boxRange.end;
+             const inLow = fret >= rStart && fret <= rEnd;
+             const inHigh = fret >= (rStart + 12) && fret <= (rEnd + 12);
+             isVisible = inLow || inHigh;
+          }
+
+          if (scaleNote && isVisible) {
+            if (state.onlyTargets && !scaleNote.isRoot && !scaleNote.isChar) {
+               // Hide
+            } else {
+                const marker = document.createElement('div');
+                let typeClass = 'note-scale';
+                if (scaleNote.isRoot) typeClass = 'note-root';
+                else if (scaleNote.isChar) typeClass = 'note-character';
+                
+                marker.className = `note-marker ${typeClass}`;
+                marker.textContent = noteName;
+                cell.appendChild(marker);
+            }
+          } else if (!isVisible) {
+             cell.classList.add('dimmed');
+          }
+
+          stringRow.appendChild(cell);
+        }
+        els.stringsContainer.appendChild(stringRow);
+      });
+    }
+
+    function renderInfo() {
+      els.infoKey.textContent = state.key;
+      els.infoScale.textContent = state.scale;
+      
+      const data = SCALES[state.scale];
+      els.infoDesc.textContent = data.description;
+      els.infoTip.textContent = data.soloTip;
+      els.infoChord.textContent = data.chordFit;
+
+      els.infoIntervals.innerHTML = '';
+      
+      let semitoneSum = 0;
+      const rootBadge = document.createElement('span');
+      rootBadge.className = 'interval-badge';
+      rootBadge.style.borderColor = 'var(--rose-500)';
+      rootBadge.textContent = 'Root';
+      els.infoIntervals.appendChild(rootBadge);
+
+      data.intervals.forEach(int => {
+        semitoneSum += int;
+        if (semitoneSum >= 12) return;
+        
+        const isChar = data.charIntervals.includes(semitoneSum);
+        const span = document.createElement('span');
+        span.className = `interval-badge ${isChar ? 'character' : ''}`;
+        
+        let name = `${semitoneSum}`;
+        if (semitoneSum === 1) name = 'b2';
+        if (semitoneSum === 2) name = '2';
+        if (semitoneSum === 3) name = 'b3';
+        if (semitoneSum === 4) name = '3';
+        if (semitoneSum === 5) name = '4';
+        if (semitoneSum === 6) name = 'b5/#4';
+        if (semitoneSum === 7) name = '5';
+        if (semitoneSum === 8) name = 'b6/#5';
+        if (semitoneSum === 9) name = '6';
+        if (semitoneSum === 10) name = 'b7';
+        if (semitoneSum === 11) name = '7';
+
+        span.textContent = name;
+        els.infoIntervals.appendChild(span);
+      });
+    }
+
+    function updateUI() {
+      Array.from(els.keySelector.children).forEach(btn => {
+        if (btn.textContent === state.key) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      renderFretboard();
+      renderInfo();
+    }
+
+    initControls();
+    renderFretNumbers();
+    updateUI();
+
+  </script>
+</body>
+</html>
